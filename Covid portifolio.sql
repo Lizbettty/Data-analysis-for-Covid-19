@@ -1,8 +1,6 @@
 /*
 Covid 19 Data Exploration 
 
-greater detail
-
 Skills used: Joins, CTE's, Temp Tables, Windows Functions, Aggregate Functions, Creating Views, Converting Data Types
 */
 
@@ -22,21 +20,22 @@ Select Date, location, total_cases ,new_cases, total_deaths, population
 From PortifolioProjects..CovidDeath
 Order by 1 ,2 ;
 
---Looking Percentage of  Total Deaths vs Total cases 
+-- Percentage of Total Deaths vs Total cases 
+-- Shows likelihood of dying if you contract covid in your country
 
 Select Date, location,continent, total_cases , total_deaths, (total_deaths/total_cases)* 100 as Deathpercentage
 From PortifolioProjects..CovidDeath
 Order by 1 ,2 ;
 
-
---Looking at total cases against total population in 
+-- Total Cases vs Population
+-- Shows what percentage of population infected with Covid
 
 Select Date, location, total_cases , population, (total_cases/population)* 100 as Casepercentage
 From PortifolioProjects..CovidDeath
 Where Location like '%africa%' and continent is not null
 Order by 1 ,2 ;
 
---Country with highest infection rate compared to population
+-- Countries with Highest Infection Rate compared to Population
 
 Select location,population, MAX (total_cases) as HighestInfectionCount , MAX  ((total_cases/population))* 100 as Casepercentage
 From PortifolioProjects..CovidDeath
@@ -52,6 +51,7 @@ Where continent is not null
 Group by location 
 Order by MaxDeath desc;
 
+--CONTINENTS
 --Continents with Highest Death count per popupation
 
 Select continent,  MAX (cast(total_deaths as int)/ population)*100 as MaxDeath
@@ -59,6 +59,8 @@ From PortifolioProjects.dbo.CovidDeath
 Where continent is not null
 Group by continent
 Order by MaxDeath desc;
+
+--GLOBAL TRENDS
 
 --Percentage of Total daily total death cases 
 
@@ -86,6 +88,7 @@ where continent is not null
 		
 
 --Total population vs Vaccinnnations
+-- Shows Percentage of Population that has recieved at least one Covid Vaccine
 
 Select dea.continent, dea.location, dea.date
 From PortifolioProjects..CovidDeath dea
@@ -123,6 +126,37 @@ Outer Join dbo.CovidVaccinations vac
 	 AND dea.date = vac.date
 Where dea.continent is not null --and vac.new_vaccinations > 1
 Order by 2,3;
+
+-- Using CTE to perform Calculation on Partition By in previous query
+
+With PopvsVac (Continent, Location, Date, Population, New_Vaccinations, RollingPeopleVaccinated)
+as
+(
+Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
+, SUM(CONVERT(int,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
+--, (RollingPeopleVaccinated/population)*100
+From PortfolioProject..CovidDeaths dea
+Join PortfolioProject..CovidVaccinations vac
+	On dea.location = vac.location
+	and dea.date = vac.date
+where dea.continent is not null 
+--order by 2,3
+)
+Select *, (RollingPeopleVaccinated/Population)*100
+From PopvsVac
+
+-- Using Temp Table to perform Calculation on Partition By in previous query
+
+DROP Table if exists #PercentPopulationVaccinated
+Create Table #PercentPopulationVaccinated
+(
+Continent nvarchar(255),
+Location nvarchar(255),
+Date datetime,
+Population numeric,
+New_vaccinations numeric,
+RollingPeopleVaccinated numeric
+)
 
 WITH CTE AS
 (
