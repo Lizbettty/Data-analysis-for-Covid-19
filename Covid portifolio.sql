@@ -52,15 +52,8 @@ Where continent is not null
 Group by continent
 Order by MaxDeath desc;
 
---Global numbers
+--Percentage of Total daily total death cases 
 
---Select Date,SUM (new_cases)--, SUM (new_deaths)--, SUM ( total_cases , population, (total_cases/population)* 100 as Casepercentage
---From PortifolioProjects.dbo.CovidDeath
-----Where Location like '%africa%'
---where continent is not null
-----Order by 1 ,2 ;
-
- --Percentage of Total daily total death cases 
 Select [date],
 			SUM (new_cases) as Ncases,
 			SUM (cast(new_deaths as int)) as Ndeaths,
@@ -73,6 +66,7 @@ Group by [Date]
 Order by DeathPerc desc
 
 --Total global death cases
+
 Select
 			SUM (new_cases) as Totalcases,
 			SUM (cast(new_deaths as int)) as Totaldeaths,
@@ -90,7 +84,8 @@ From PortifolioProjects..CovidDeath dea
 Join PortifolioProjects..CovidVaccinations vac
 On dea.location = vac.location
 and dea.date = vac.date
---how do l remove duplicate rows from the sql???
+
+--to further remove duplicate rows from above query???
 
 
 Select dea.continent, dea.location, dea.date, dea.population , vac.new_vaccinations 
@@ -120,26 +115,6 @@ Outer Join dbo.CovidVaccinations vac
 	 AND dea.date = vac.date
 Where dea.continent is not null --and vac.new_vaccinations > 1
 Order by 2,3;
-
---SELECT column_name(s)
---FROM table1
---FULL OUTER JOIN table2
---ON table1.column_name = table2.column_name
---WHERE condition;
-
-
---WITH CTE AS(
--- Select dea.continent, dea.location, dea.date, dea.population , vac.new_vaccinations, 
---		RN = ROW_NUMBER()
---			 OVER(PARTITION BY dea.location ORDER BY dea.location, dea.date),
---		SUM (cast(vac.new_vaccinations as bigint)) 
---				 OVER (PARTITION BY dea.location ORDER BY dea.location, dea.date) as TotalVac
---From PortifolioProjects..CovidDeath dea
---Join PortifolioProjects..CovidVaccinations vac
---	On dea.location = vac.location
---	 AND dea.date = vac.date
---Where dea.continent is not null and vac.new_vaccinations > 1
---Group by dea.location
 
 WITH CTE AS
 (
